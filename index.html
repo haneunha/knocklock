@@ -73,6 +73,7 @@
 
         .gallery-grid img.selected {
             border-color: #ff4757 !important;
+            background-color: #45282a !important; 
         }
 
         .gallery-grid img.info-selected {
@@ -113,24 +114,69 @@
 
         #info-panel {
             position: fixed;
-            bottom: -150px;
+            bottom: -200px;
             left: 0;
             width: 100%;
-            background-color: #1a2530;
-            border-top: 4px solid #2ecc71;
-            color: #e0e0e0;
-            padding: 20px;
-            box-sizing: border-box;
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
+            margin: 0;
+            padding: 0;
             transition: bottom 0.3s ease-in-out;
             z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            filter: drop-shadow(0 -5px 10px rgba(0, 0, 0, 0.5));
         }
 
         #info-panel.show {
             bottom: 0;
+        }
+
+        .info-header {
+            position: relative;
+            width: 100%;
+            height: 45px;
+            line-height: 0;
+        }
+
+        .info-lines-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #info-name {
+            position: absolute;
+            top: 0;
+            left: 20px;
+            height: 42px;
+            line-height: 42px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #2ecc71;
+            white-space: nowrap;
+            pointer-events: none;
+            margin: 0;
+        }
+
+        #info-body {
+            background-color: #1a2530; 
+            width: 100%;
+            padding: 24px 20px; 
+            box-sizing: border-box;
+            display: flex;
+            align-items: center; 
+        }
+
+        #info-desc {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            line-height: 1.5;
+            text-align: left;
+            margin: 0;
         }
     </style>
 </head>
@@ -143,7 +189,18 @@
     <button id="deselect-btn" title="전체 해제">X</button>
 
     <div id="info-panel">
-        여기에 아이템 정보가 표시됩니다.
+        <div class="info-header">
+            <svg class="info-lines-svg" width="100%" height="45">
+                <path id="info-bg-path" d="M 0 2 L 180 2 L 210 42 L 0 42 Z" fill="#1a2530" />
+                <rect x="0" y="42" width="100%" height="3" fill="#1a2530" />
+                <path id="info-border-path" d="M 0 2 L 180 2 L 210 42" fill="none" stroke="#2ecc71" stroke-width="3" stroke-linejoin="round" />
+                <line x1="0" y1="42" x2="100%" y2="42" stroke="#2ecc71" stroke-width="3" />
+            </svg>
+            <div id="info-name">아이템명</div>
+        </div>
+        <div id="info-body">
+            <div id="info-desc">아이템 설명</div>
+        </div>
     </div>
 
     <script>
@@ -156,9 +213,277 @@
             { title: "장신구", folder: "beauty", prefix: "beauty_", count: 15 }
         ];
 
+        const itemData = {
+            "cook_1": { name: "쉬림프 칵테일", desc: "[모든 플로어] 필드 전체" },
+            "cook_2": { name: "허브 그린 수프", desc: "[모든 플로어] 필드 전체" },
+            "cook_3": { name: "시트러스 샐러드", desc: "[모든 플로어] 필드 전체" },
+            "cook_4": { name: "크림치즈 훈제 연어", desc: "[모든 플로어] 필드 전체" },
+            "cook_5": { name: "레몬 토마토 카프레제", desc: "[호텔 로비] 뷔페" },
+            "cook_6": { name: "에그 카나페", desc: "[호텔 로비] 뷔페" },
+            "cook_7": { name: "관자 세비체", desc: "[호텔 로비] 뷔페" },
+            "cook_8": { name: "가스파초", desc: "[호텔 로비 | 로열 플로어] 필드 전체" },
+            "cook_9": { name: "단호박 수프", desc: "[호텔 로비 | 로열 플로어] 필드 전체" },
+            "cook_10": { name: "연어알 블리니", desc: "[로열 플로어] 필드 전체" },
+            "cook_11": { name: "부라타 치즈 샐러드", desc: "[로열 플로어] 필드 전체" },
+            "cook_12": { name: "칠리 오이스터", desc: "[로열 플로어 | 악마의 신전] 필드 전체" },
+            "cook_13": { name: "명란버터 브루스케타", desc: "[로열 플로어 | 악마의 신전] 필드 전체" },
+            "cook_14": { name: "아스파라거스 수란", desc: "[로열 플로어 | 악마의 신전] 필드 전체" },
+            "cook_15": { name: "게살 수프", desc: "[로열 플로어 | 악마의 신전] 필드 전체" },
+            "cook_16": { name: "트러플 크림 스프", desc: "[악마의 신전] 필드 전체" },
+            "cook_17": { name: "비프 카르파초", desc: "[악마의 신전] 필드 전체" },
+            "cook_18": { name: "캐비어 카나페", desc: "[악마의 신전] 필드 전체" },
+            "cook_19": { name: "데블드 에그", desc: "[호텔 로비 | 악마의 신전] 필드 전체" },
+            "cook_20": { name: "시금치 사보리 플랑", desc: "[호텔 로비 | 악마의 신전] 필드 전체" },
+            "cook_21": { name: "토마토 파스타", desc: "[모든 플로어] 디럭스룸, 도시락" },
+            "cook_22": { name: "대구 구이", desc: "[모든 플로어] 디럭스룸, 도시락" },
+            "cook_23": { name: "치킨 포트파이", desc: "[호텔 로비] 디럭스룸, 도시락" },
+            "cook_24": { name: "크림 파스타", desc: "[호텔 로비] 디럭스룸, 도시락" },
+            "cook_25": { name: "리조또", desc: "[호텔 로비 | 로열 플로어] 디럭스룸, 도시락" },
+            "cook_26": { name: "수플레 오믈렛", desc: "[로열 플로어] 디럭스룸, 도시락" },
+            "cook_27": { name: "치킨 프리카세", desc: "[로열 플로어] 디럭스룸, 도시락" },
+            "cook_28": { name: "봉골레", desc: "[로열 플로어] 디럭스룸, 도시락" },
+            "cook_29": { name: "에스카르고", desc: "[로열 플로어 | 악마의 신전] 디럭스룸, 도시락" },
+            "cook_30": { name: "크로크 무슈", desc: "[로열 플로어 | 악마의 신전] 디럭스룸, 도시락" },
+            "cook_31": { name: "오렌지 오리 스테이크", desc: "[로열 플로어 | 악마의 신전] 디럭스룸, 도시락" },
+            "cook_32": { name: "올리브 라자냐", desc: "[악마의 신전] 도시락" },
+            "cook_33": { name: "허브치킨", desc: "[악마의 신전] 도시락" },
+            "cook_34": { name: "아몬드 송어 구이", desc: "[악마의 신전] 도시락" },
+            "cook_35": { name: "가리비 그라탱", desc: "[호텔 로비 | 악마의 신전] 디럭스룸, 도시락" },
+            "cook_36": { name: "로스트 비프", desc: "[호텔 로비] 뷔페 스위트룸 & 부띠끄샵" },
+            "cook_37": { name: "은빛 넙치 구이", desc: "[호텔 로비] 뷔페 스위트룸 & 부띠끄샵" },
+            "cook_38": { name: "초원 양갈비", desc: "[로열 플로어] 잔디밭" },
+            "cook_39": { name: "안심 스테이크", desc: "[로열 플로어] 압수품실, 컬렉션룸" },
+            "cook_40": { name: "크랜베리 칠면조", desc: "[로열 플로어] 개인공연장" },
+            "cook_41": { name: "적포도 멧돼지 통구이", desc: "[로열 플로어] 무도회장" },
+            "cook_42": { name: "대문어 구이", desc: "[로열 플로어] 수영장" },
+            "cook_43": { name: "비프 웨링턴", desc: "[악마의 신전] 악마 헬스장" },
+            "cook_44": { name: "스팀 랍스타", desc: "[악마의 신전] 마그마 사우나" },
+            "cook_45": { name: "크라운 로스트", desc: "[악마의 신전] 영접실" },
+            "tool_1": { name: "하트 쇼커", desc: "[호텔 로비] 상자" },
+            "tool_2": { name: "더블 프로틴", desc: "[호텔 로비] 상자, 윤슬" },
+            "tool_3": { name: "퍼펙트 케어", desc: "[호텔 로비] 뷔페 스위트룸 - 상자" },
+            "tool_4": { name: "박스", desc: "[호텔 로비] 상자" },
+            "tool_5": { name: "호텔 카트", desc: "[호텔 로비] 상자" },
+            "tool_6": { name: "매니저 패스", desc: "[호텔 로비] 매니저 레드피스트 처치" },
+            "tool_7": { name: "아케인 쇼커", desc: "[로열 플로어] 구달수 처치" },
+            "tool_8": { name: "온기를 담은 등불", desc: "[악마의 신전] 윤슬(1000노크)" },
+            "tool_9": { name: "갈망을 담은 등불", desc: "[로열 플로어] 비밀 공간 잠긴 상자 - 하트 열쇠(구달수 처치)" },
+            "tool_10": { name: "염원을 담은 등불", desc: "[악마의 신전] 이하나 처치" },
+            "tool_11": { name: "연회장 의자", desc: "[악마의 신전] 상자" },
+            "tool_12": { name: "직원 메뉴얼", desc: "[호텔 로비] 상자" },
+            "tool_13": { name: "나무 행거", desc: "[로열 플로어] 상자" },
+            "tool_14": { name: "호텔 소화기", desc: "[호텔 로비] 상자" },
+            "tool_15": { name: "데빌 아이", desc: "[호텔 로비] 상자, 유광근(50노크)" },
+            "tool_16": { name: "그랜드 파라솔", desc: "[로열 플로어] 상자" },
+            "tool_17": { name: "타임 브레이커", desc: "[호텔 로비] 상자" },
+            "tool_18": { name: "오래된 나무 배트", desc: "[로열 플로어] 상자" },
+            "tool_19": { name: "황동 커튼 봉", desc: "[로열 플로어] 상자" },
+            "tool_20": { name: "태양의 창", desc: "[로열 플로어] 상자" },
+            "tool_21": { name: "너클 튜브", desc: "[로열 플로어] 수영장 - 상자" },
+            "tool_22": { name: "강철 배트", desc: "[호텔 로비] 상자" },
+            "tool_23": { name: "황금 너클", desc: "[로열 플로어] 상자, 강아율(100노크)" },
+            "tool_24": { name: "지옥 청소기", desc: "[악마의 신전] 화염방사기 악마 처치" },
+            "tool_25": { name: "핸드 클리닝", desc: "[악마의 신전] 상자, 윤슬(1,000노크)" },
+            "tool_26": { name: "탐욕의 의자", desc: "[악마의 신전] 상자" },
+            "tool_27": { name: "행어 보우", desc: "[호텔 로비] 상자" },
+            "tool_28": { name: "캔들 로드", desc: "[호텔 로비] 바 상자" },
+            "tool_29": { name: "에이드버스터", desc: "[악마의 신전] 상자" },
+            "tool_30": { name: "헬트리거", desc: "[호텔 로비] 상자, 유광근(100노크)" },
+            "tool_31": { name: "블루 템페스트", desc: "[악마의 신전] 상자" },
+            "tool_32": { name: "엔틱 바이올린", desc: "[로열 플로어] 무도회장 - 상자" },
+            "tool_33": { name: "데드 릴렉서", desc: "[악마의 신전] 상자" },
+            "tool_34": { name: "다트 건", desc: "[로열 플로어] 잔디밭 - 상자" },
+            "tool_35": { name: "앤틱 첼로", desc: "[로열 플로어] 무도회장 - 상자" },
+            "tool_36": { name: "고압 세척기", desc: "[로열 플로어] 수영장 - 상자" },
+            "tool_37": { name: "트윈 일렉 기타", desc: "[로열 플로어] 상자" },
+            "tool_38": { name: "데빌 애로우", desc: "[악마의 신전] 상자" },
+            "tool_39": { name: "바주카", desc: "[악마의 신전] 상자" },
+            "tool_40": { name: "탐욕의 활", desc: "[악마의 신전] 상자" },
+            "tool_41": { name: "벨팝", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "tool_42": { name: "헬팝", desc: "[로열 플로어] 상자" },
+            "tool_43": { name: "믹스팝", desc: "[악마의 신전] 상자" },
+            "tool_44": { name: "폭탄", desc: "[로열 플로어] 무도회장 상자, 이윤지(100노크)" },
+            "tool_45": { name: "명품 폭탄", desc: "[악마의 신전] 상자" },
+            "tool_46": { name: "도시락", desc: "[모든 플로어] 푸른 가로등의 방 - 상자" },
+            "tool_47": { name: "스턴팝", desc: "[로열 플로어] 상자" },
+            "tool_48": { name: "매혹 폭탄", desc: "[로열 플로어] 상자" },
+            "tool_49": { name: "세이프팝", desc: "[로열 플로어] 상자" },
+            "tool_50": { name: "작은 파랑불", desc: "[로열 플로어] 상자, 맹규리(100노크)" },
+            "tool_51": { name: "빗자루", desc: "[모든 플로어] 하우스키퍼 악마 처치" },
+            "tool_52": { name: "디시펜서", desc: "[모든 플로어] 룸서비스 악마 처치" },
+            "tool_53": { name: "캐리어 폭탄", desc: "[모든 플로어] 벨보이 악마 처치" },
+            "tool_54": { name: "실크 부채", desc: "[로열 플로어] 댄서 악마 처치" },
+            "tool_55": { name: "파이프 오르간", desc: "[로열 플로어] 음악대 악마 처치" },
+            "tool_56": { name: "데빌 샷건", desc: "[로열 플로어] 유물 수호자 처치" },
+            "tool_57": { name: "삼지창", desc: "[악마의 신전] 제단 수문장 처치" },
+            "tool_58": { name: "악마 채찍", desc: "[호텔 로비] 매니저 레드피스트 처치" },
+            "tool_59": { name: "화염 지팡이", desc: "[로열 플로어] 구달수 처치" },
+            "tool_60": { name: "데몬팝", desc: "[악마의 신전] 이하나 처치" },
+            "key_1": { name: "디럭스룸 열쇠", desc: "[모든 플로어] 상자" },
+            "key_2": { name: "스위트룸 열쇠", desc: "[모든 플로어] 상자" },
+            "key_3": { name: "부띠끄샵 열쇠", desc: "[호텔 로비] 부띠끄샵 - 상자" },
+            "key_4": { name: "뷔페 열쇠", desc: "[호텔 로비] 뷔페 상자" },
+            "key_5": { name: "비밀 서고 열쇠", desc: "[호텔 로비] 서재 - 상자" },
+            "key_6": { name: "개인 공연장 열쇠", desc: "[로열 플로어] 개인 공연장 - 상자" },
+            "key_7": { name: "무도회장 열쇠", desc: "[로열 플로어] 무도회장 - 디럭스룸" },
+            "key_8": { name: "컬렉션룸 열쇠", desc: "[로열 플로어] 컬렉션룸 - 상자" },
+            "key_9": { name: "수영장 열쇠", desc: "[로열 플로어] 수영장 - 우측 하단 필드" },
+            "key_10": { name: "마그마 사우나 열쇠", desc: "[악마의 신전] 마그나 사우나 - 상자" },
+            "key_11": { name: "악마 헬스장 열쇠", desc: "[악마의 신전] 악마 헬스장 - 디럭스룸" },
+            "item_1": { name: "쓰레기", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_2": { name: "단추", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_3": { name: "슬리퍼", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_4": { name: "수건", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_5": { name: "옷걸이", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_6": { name: "빗", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_7": { name: "성냥갑", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_8": { name: "가죽 지갑", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_9": { name: "반짇고리", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_10": { name: "구둣주걱", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_11": { name: "고급 우산", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_12": { name: "손전등", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_13": { name: "헤어 드라이기", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_14": { name: "전화기", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_15": { name: "패션 잡지", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_16": { name: "방향제", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_17": { name: "캐시미어 쿠션", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_18": { name: "금장 만년필", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_19": { name: "엔틱 회중시계", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_20": { name: "웨딩링", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "item_21": { name: "헌 책", desc: "[호텔 로비] 서고 - 상자" },
+            "item_22": { name: "악마는 아마도 운다 책", desc: "[호텔 로비] 서고 - 상자" },
+            "item_23": { name: "13일의 일요일 책", desc: "[호텔 로비] 서고 - 상자" },
+            "item_24": { name: "제설의 고향 책", desc: "[호텔 로비] 서고 - 상자" },
+            "item_25": { name: "무서운 딱! 새우 좋아! 책", desc: "[호텔 로비] 서고 - 상자" },
+            "item_26": { name: "이 또 죽지 걸작선 책", desc: "[호텔 로비] 서고 - 상자" },
+            "item_27": { name: "가죽 벨트", desc: "[호텔 로비] 부띠끄샵 - 상자" },
+            "item_28": { name: "스카프", desc: "[호텔 로비] 부띠끄샵 - 상자" },
+            "item_29": { name: "다크체리 넥타이", desc: "[호텔 로비 | 로열 플로어] 부띠끄샵, 컬렉션룸 - 상자" },
+            "item_30": { name: "실크 손수건", desc: "[호텔 로비 | 로열 플로어] 부띠끄샵, 컬렉션룸 - 상자" },
+            "item_31": { name: "하이엔드 립스틱", desc: "[호텔 로비 | 로열 플로어] 부띠끄샵, 컬렉션룸 - 상자" },
+            "item_32": { name: "흑진주 귀걸이", desc: "[호텔 로비 | 로열 플로어] 부띠끄샵, 컬렉션룸 - 상자" },
+            "item_33": { name: "루비 골드링", desc: "[호텔 로비 | 로열 플로어] 부띠끄샵, 컬렉션룸 - 상자" },
+            "item_34": { name: "블루 다이아 목걸이", desc: "[호텔 로비 | 로열 플로어] 부띠끄샵, 컬렉션룸 - 상자" },
+            "item_35": { name: "올드머니 퍼코트", desc: "[호텔 로비 | 로열 플로어] 부띠끄샵, 컬렉션룸 - 상자" },
+            "item_36": { name: "벨벳 머메이드 드레스", desc: "[호텔 로비 | 로열 플로어] 부띠끄샵, 컬렉션룸 - 상자" },
+            "item_37": { name: "냅킨", desc: "[호텔 로비] 뷔페 - 상자" },
+            "item_38": { name: "커피잔", desc: "[호텔 로비] 뷔페 - 상자" },
+            "item_39": { name: "크리스털 와인잔", desc: "[호텔 로비] 뷔페 - 상자" },
+            "item_40": { name: "발레슈즈", desc: "[로열 플로어] 개인공연장 - 상자" },
+            "item_41": { name: "꽃다발 바구니", desc: "[로열 플로어] 개인공연장 - 상자" },
+            "item_42": { name: "오페라 글라스", desc: "[로열 플로어] 개인공연장 - 상자" },
+            "item_43": { name: "은빛 메트로놈", desc: "[로열 플로어] 개인공연장 - 상자" },
+            "item_44": { name: "크리스털 티아라", desc: "[로열 플로어] 개인공연장 - 상자" },
+            "item_45": { name: "VIP 좌석표", desc: "[로열 플로어] 개인공연장 - 상자" },
+            "item_46": { name: "무도회 가면", desc: "[로열 플로어] 무도회장 - 상자" },
+            "item_47": { name: "밀랍 양초", desc: "[로열 플로어] 무도회장 - 상자" },
+            "item_48": { name: "깃털 부채", desc: "[로열 플로어] 무도회장 - 상자" },
+            "item_49": { name: "오닉스 넥타이핀", desc: "[로열 플로어] 무도회장 - 상자" },
+            "item_50": { name: "토파즈 커프스", desc: "[로열 플로어] 무도회장 - 상자" },
+            "item_51": { name: "황금 지팡이", desc: "[로열 플로어] 무도회장 - 상자" },
+            "item_52": { name: "파란색 선글라스", desc: "[로열 플로어] 컬렉션룸 - 상자" },
+            "item_53": { name: "하금테 안경", desc: "[로열 플로어] 컬렉션룸 - 상자" },
+            "item_54": { name: "뿔테 안경", desc: "[로열 플로어] 컬렉션룸 - 상자" },
+            "item_55": { name: "그루초 안경", desc: "[로열 플로어] 컬렉션룸 - 상자" },
+            "item_56": { name: "적청 안경", desc: "[로열 플로어] 컬렉션룸 - 상자" },
+            "item_57": { name: "보틀 쉽", desc: "[로열 플로어] 컬렉션룸 - 상자" },
+            "item_58": { name: "만년빙 조각상", desc: "[로열 플로어] 컬렉션룸 - 상자" },
+            "item_59": { name: "흑백 트럼프카드", desc: "[로열 플로어] 컬렉션룸 - 상자" },
+            "item_60": { name: "악취나는 분재", desc: "[로열 플로어] 컬렉션룸 - 상자" },
+            "item_61": { name: "초대형 새장", desc: "[로열 플로어] 컬렉션룸 - 상자" },
+            "item_62": { name: "튜브", desc: "[로열 플로어] 수영장 - 상자" },
+            "item_63": { name: "안전 호루라기", desc: "[로열 플로어] 수영장 - 상자" },
+            "item_64": { name: "기름 비누", desc: "[로열 플로어] 수영장 - 상자" },
+            "item_65": { name: "바디오일", desc: "[로열 플로어] 수영장 - 상자" },
+            "item_66": { name: "돌멩이", desc: "[로열 플로어] 잔디밭 - 상자" },
+            "item_67": { name: "짐먼진드기의 진액", desc: "[로열 플로어] 잔디밭 - 상자" },
+            "item_68": { name: "기르레알 꽃가루", desc: "[로열 플로어] 잔디밭 - 상자" },
+            "item_69": { name: "아나팔락시큼 뿌리", desc: "[로열 플로어] 잔디밭 - 상자" },
+            "item_70": { name: "구달수 금액자", desc: "[로열 플로어] 구달수의 금고 - 상자" },
+            "item_71": { name: "티타늄 안경집", desc: "[로열 플로어] 구달수의 금고 - 상자" },
+            "item_72": { name: "강철 장갑", desc: "[로열 플로어] 구달수의 금고 - 상자" },
+            "item_73": { name: "목욕 가운", desc: "[로열 플로어] 구달수의 금고 - 상자" },
+            "item_74": { name: "수석", desc: "[로열 플로어] 잔디밭 상자, 구달수의 금고 - 상자" },
+            "item_75": { name: "녹슨 동전", desc: "[악마의 신전] 대기실 - 상자" },
+            "item_76": { name: "방울", desc: "[악마의 신전] 대기실 - 상자" },
+            "item_77": { name: "더러운 우비", desc: "[악마의 신전] 대기실 - 상자" },
+            "item_78": { name: "거꾸로 모래시계", desc: "[악마의 신전] 대기실 - 상자" },
+            "item_79": { name: "빨간 머리 봉제 인형", desc: "[악마의 신전] 대기실 - 상자" },
+            "item_80": { name: "타버린 나무 팔찌", desc: "[악마의 신전] 대기실 - 상자" },
+            "item_81": { name: "저주받은 LP판", desc: "[악마의 신전] 대기실 - 상자" },
+            "item_82": { name: "가시넝쿨 수면 안대", desc: "[악마의 신전] 대기실 - 상자" },
+            "item_83": { name: "오래된 장송곡", desc: "[악마의 신전] 대기실 - 상자" },
+            "item_84": { name: "악마 초상화", desc: "[악마의 신전] 대제단 - 상자" },
+            "item_85": { name: "붉은 실타래", desc: "[악마의 신전] 신전광장 - 상자" },
+            "item_86": { name: "마네킹 상반신", desc: "[악마의 신전] 신전광장 - 상자" },
+            "item_87": { name: "녹아버린 양초", desc: "[악마의 신전] 신전광장 - 상자" },
+            "item_88": { name: "탁한 수정 구슬", desc: "[악마의 신전] 신전광장 - 상자" },
+            "item_89": { name: "봉인된 양피지", desc: "[악마의 신전] 신전광장 - 상자" },
+            "item_90": { name: "크리스털 해골", desc: "[악마의 신전] 신전광장 - 상자" },
+            "item_91": { name: "녹슨 성배", desc: "[악마의 신전] 신전광장 - 상자" },
+            "item_92": { name: "검은 레이스 베일", desc: "[악마의 신전] 신전광장 - 상자" },
+            "item_93": { name: "스팀 타이머", desc: "[악마의 신전] 마그마 사우나 - 상자" },
+            "item_94": { name: "마사지 스톤", desc: "[악마의 신전] 마그마 사우나 - 상자" },
+            "item_95": { name: "고장난 온도계", desc: "[악마의 신전] 마그마 사우나 - 상자" },
+            "item_96": { name: "멘틀 유리 바구니", desc: "[악마의 신전] 마그마 사우나 - 상자" },
+            "item_97": { name: "스포츠 테이프", desc: "[악마의 신전] 악마 헬스장 - 상자" },
+            "item_98": { name: "체중계", desc: "[악마의 신전] 악마 헬스장 - 상자" },
+            "item_99": { name: "철사슬 줄넘기", desc: "[악마의 신전] 악마 헬스장 - 상자" },
+            "item_100": { name: "헤비 메탈 아령", desc: "[악마의 신전] 악마 헬스장 - 상자" },
+            "item_101": { name: "검은 덩어리", desc: "[모든 플로어] 직원 악마 처치" },
+            "item_102": { name: "직원 쿠폰", desc: "[모든 플로어] 직원 악마 처치" },
+            "item_103": { name: "장미 코사지", desc: "[로열 플로어] 댄서 악마 처치" },
+            "item_104": { name: "심홍색 드럼", desc: "[로열 플로어] 음악대 악마 처치" },
+            "item_105": { name: "황금 서클렛", desc: "[로열 플로어] 유물 수호자 처치" },
+            "item_106": { name: "악마의 심장", desc: "[악마의 신전] 제단 수문장 처치" },
+            "item_107": { name: "매니저 명찰", desc: "[호텔 로비] 매니저 레드피스트 처치" },
+            "item_108": { name: "황금 단안경", desc: "[로열 플로어] 지배인 구달수 처치" },
+            "item_109": { name: "악마의 뿔", desc: "[악마의 신전] 아크데몬 이하나 처치" },
+            "food_1": { name: "양파", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "food_2": { name: "당근", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "food_3": { name: "파스타면", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "food_4": { name: "카카오", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "food_5": { name: "송아지 안심", desc: "[호텔 로비 | 로열 플로어] 상자" },
+            "food_6": { name: "밀가루", desc: "[호텔 로비] 뷔페 - 상자" },
+            "food_7": { name: "향신료", desc: "[호텔 로비] 뷔페 - 상자" },
+            "food_8": { name: "고깃조각", desc: "[호텔 로비] 뷔페 - 상자" },
+            "food_9": { name: "버석버터", desc: "[호텔 로비] 뷔페 - 상자" },
+            "food_10": { name: "말랑버섯", desc: "[호텔 로비] 뷔페 - 상자" },
+            "food_11": { name: "배추추", desc: "[호텔 로비] 뷔페 - 상자" },
+            "food_12": { name: "토마토", desc: "[로열 플로어] 식량창고 - 상자" },
+            "food_13": { name: "베이컨", desc: "[로열 플로어] 식량창고 - 상자" },
+            "food_14": { name: "트러플 오일", desc: "[로열 플로어] 식량창고 - 상자" },
+            "food_15": { name: "캐비어", desc: "[로열 플로어] 식량창고 - 상자" },
+            "food_16": { name: "랍스터", desc: "[로열 플로어] 식량창고 - 상자" },
+            "food_17": { name: "달걀", desc: "[악마의 신전] 만찬창고 - 상자" },
+            "food_18": { name: "녹조 우유", desc: "[악마의 신전] 만찬창고 - 상자" },
+            "food_19": { name: "붉은 석류", desc: "[악마의 신전] 만찬창고 - 상자" },
+            "food_20": { name: "싸늘한 만드레이크", desc: "[악마의 신전] 만찬창고 - 상자" },
+            "food_21": { name: "초코 믹스커피", desc: "[모든 플로어] 직원 악마 처치" },
+            "beauty_1": { name: "유령 투구", desc: "맹규리(1,000노크)" },
+            "beauty_2": { name: "브레인 피스 브로치", desc: "[메인 퀘스트] '부띠끄샵 탐방' 클리어" },
+            "beauty_3": { name: "실크 장갑", desc: "[서브 퀘스트] '심심한 맹규리' 클리어" },
+            "beauty_4": { name: "비틀 언록커", desc: "[서브 퀘스트] '눈이 침침한 지휘관을 위해' 클리어" },
+            "beauty_5": { name: "타임러너 기어", desc: "[서브 퀘스트] '시간은 흘러간다' 클리어" },
+            "beauty_6": { name: "장기 근속 메달", desc: "[서브 퀘스트] '윤슬을 위한 호신용품' 클리어" },
+            "beauty_7": { name: "노크 리본", desc: "[서브 퀘스트] '소비의 심리' 클리어" },
+            "beauty_8": { name: "샐러맨더 보구", desc: "[메인 퀘스트] '능동적인 불청객' 클리어" },
+            "beauty_9": { name: "젠틀 미믹", desc: "맹규리(1,000노크)" },
+            "beauty_10": { name: "에메랄드 헤어콤", desc: "[메인 퀘스트] '매니저를 구하라' 클리어" },
+            "beauty_11": { name: "데몬 시냅스", desc: "[메인 퀘스트] '이판 사판에 팔판까지' 클리어" },
+            "beauty_12": { name: "루비다일 백", desc: "맹규리(5,000노크)" },
+            "beauty_13": { name: "데몬 슈터", desc: "맹규리(1,000노크)" },
+            "beauty_14": { name: "칼날 부채", desc: "맹규리(1,000노크)" },
+            "beauty_15": { name: "해적왕의 유골", desc: "맹규리(10,000노크)" }
+        };
+
         const container = document.getElementById('main-container');
         const mainTitle = document.getElementById('main-title');
+        
         const infoPanel = document.getElementById('info-panel');
+        const infoName = document.getElementById('info-name');
+        const infoDesc = document.getElementById('info-desc');
+        
         const deselectBtn = document.getElementById('deselect-btn'); 
         
         let savedSelections = JSON.parse(localStorage.getItem('dogamSelections')) || [];
@@ -168,7 +493,7 @@
 
         let isDragging = false;
         let isSelecting = true; 
-        let lastTouchedElement = null; // 모바일 드래그 시 방금 지나간 이미지 기록용
+        let lastTouchedElement = null; 
 
         mainTitle.addEventListener('click', () => {
             if (currentMode === 'select') {
@@ -197,7 +522,6 @@
             localStorage.removeItem('dogamSelections');
         });
 
-        // 드래그 종료 이벤트 (PC, 모바일 공통 처리)
         window.addEventListener('pointerup', () => {
             isDragging = false;
             lastTouchedElement = null;
@@ -228,9 +552,11 @@
                 const img = document.createElement('img');
                 
                 img.src = `img/${category.folder}/${category.prefix}${i}.png`; 
-                img.alt = `${category.title} ${i}`;
                 const itemId = `${category.prefix}${i}`;
                 img.dataset.id = itemId;
+                
+                const itemInfo = itemData[itemId];
+                img.alt = itemInfo ? itemInfo.name : `${category.title} ${i}`;
 
                 if (savedSelections.includes(itemId)) {
                     img.classList.add('selected');
@@ -238,7 +564,6 @@
 
                 img.ondragstart = () => false;
 
-                // 1. 선택 모드: 즉각적인 드래그 시작 (PC 마우스 & 모바일 터치 공통)
                 img.addEventListener('pointerdown', function(e) {
                     if (e.pointerType === 'mouse' && e.button !== 0) return; 
                     
@@ -251,7 +576,6 @@
                     }
                 });
 
-                // 2. 정보 모드: 스마트폰 스크롤 중 실수로 켜지는 걸 방지하기 위해 탭(click)으로 분리
                 img.addEventListener('click', function() {
                     if (currentMode === 'info') {
                         if (currentInfoId === this.dataset.id) {
@@ -263,13 +587,32 @@
                             this.classList.add('info-selected');
                             currentInfoId = this.dataset.id;
                             
-                            infoPanel.textContent = `[${category.title}] ${this.alt}의 상세 정보입니다.`;
+                            const data = itemData[this.dataset.id];
+                            if (data) {
+                                // 💡 카테고리명을 제외하고 아이템 이름만 출력하도록 변경
+                                infoName.textContent = data.name;
+                                infoDesc.textContent = data.desc;
+                            } else {
+                                // 💡 정보가 없을 때의 기본값도 이름만 표시
+                                infoName.textContent = `알 수 없음`;
+                                infoDesc.textContent = `정보가 없습니다.`;
+                            }
+
+                            const textWidth = infoName.offsetWidth;
+                            const topWidth = textWidth + 40; 
+                            const bottomWidth = topWidth + 30; 
+                            
+                            const bgPath = document.getElementById('info-bg-path');
+                            const borderPath = document.getElementById('info-border-path');
+                            
+                            bgPath.setAttribute('d', `M 0 2 L ${topWidth} 2 L ${bottomWidth} 42 L 0 42 Z`);
+                            borderPath.setAttribute('d', `M 0 2 L ${topWidth} 2 L ${bottomWidth} 42`);
+                            
                             infoPanel.classList.add('show');
                         }
                     }
                 });
 
-                // 3. PC 전용 마우스 드래그 이동
                 img.addEventListener('pointerenter', function(e) {
                     if (e.pointerType === 'mouse' && currentMode === 'select' && isDragging) {
                         if (isSelecting) {
@@ -281,16 +624,13 @@
                     }
                 });
 
-                // 4. 모바일 전용 손가락 드래그 이동 (핵심 기능)
                 img.addEventListener('touchmove', function(e) {
                     if (currentMode === 'select' && isDragging) {
-                        e.preventDefault(); // 스크롤 안 넘어가고 드래그에 집중하게 함
+                        e.preventDefault(); 
                         
                         const touch = e.touches[0];
-                        // 손가락 위치 좌표(x, y)에 있는 실제 이미지 찾기
                         const element = document.elementFromPoint(touch.clientX, touch.clientY);
                         
-                        // 이미지고, 방금 전 지나온 이미지가 아니라면 처리
                         if (element && element.tagName === 'IMG' && element !== lastTouchedElement) {
                             if (isSelecting) {
                                 element.classList.add('selected');
@@ -301,7 +641,7 @@
                             lastTouchedElement = element;
                         }
                     }
-                }, { passive: false }); // preventDefault 작동을 위해 필수
+                }, { passive: false }); 
 
                 gridEl.appendChild(img);
             }
