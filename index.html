@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>도감</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+  
+            padding: 20px 20%; 
+            background-color: #121820; 
+            margin: 0;
+            color: #e0e0e0;
+   
+            user-select: none;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 36px;
+            color: #ffffff;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            letter-spacing: 5px;
+        }
+
+        h2 {
+            color: #e0e0e0;
+            border-left: 5px solid #e0e0e0;
+            padding-left: 10px;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+        }
+
+        .gallery-grid img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: contain;
+            padding: 10px 10%;
+            box-sizing: border-box;
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            background-color: #202d3b; 
+            transition: all 0.15s ease-in-out;
+
+            -webkit-user-drag: none; 
+        }
+
+        .gallery-grid img:hover,
+        .gallery-grid img:active {
+            transform: scale(0.92);
+        }
+
+        .gallery-grid img.selected {
+            border-color: #ff4757 !important;
+        }
+
+        #deselect-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #ff4757;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        #deselect-btn:hover {
+            background-color: #ff6b81;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>도감</h1>
+
+    <button id="deselect-btn" title="전체 해제">X</button>
+
+    <div id="main-container">
+    </div>
+
+    <script>
+        const categories = [
+            { title: "음식", folder: "cook", prefix: "cook_", count: 45 },
+            { title: "도구", folder: "tool", prefix: "tool_", count: 60 },
+            { title: "열쇠", folder: "key", prefix: "key_", count: 11 },
+            { title: "잡화", folder: "item", prefix: "item_", count: 109 },
+            { title: "요리 재료", folder: "food", prefix: "food_", count: 21 },
+            { title: "장신구", folder: "beauty", prefix: "beauty_", count: 15 }
+        ];
+
+        const container = document.getElementById('main-container');
+        let savedSelections = JSON.parse(localStorage.getItem('dogamSelections')) || [];
+
+        let isDragging = false;
+        let isSelecting = true;
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        function updateStorage(id, add) {
+            if (add) {
+                if (!savedSelections.includes(id)) savedSelections.push(id);
+            } else {
+                savedSelections = savedSelections.filter(itemId => itemId !== id);
+            }
+            localStorage.setItem('dogamSelections', JSON.stringify(savedSelections));
+        }
+
+        categories.forEach(category => {
+            const titleEl = document.createElement('h2');
+            titleEl.textContent = category.title;
+            container.appendChild(titleEl);
+
+            const gridEl = document.createElement('div');
+            gridEl.className = 'gallery-grid';
+            
+            for (let i = 1; i <= category.count; i++) {
+                const img = document.createElement('img');
+                
+                img.src = `img/${category.folder}/${category.prefix}${i}.png`; 
+                img.alt = `${category.title} ${i}`;
+                const itemId = `${category.prefix}${i}`;
+                img.dataset.id = itemId;
+
+                if (savedSelections.includes(itemId)) {
+                    img.classList.add('selected');
+                }
+
+                img.ondragstart = () => false;
+
+                img.addEventListener('mousedown', function(e) {
+                    if (e.button !== 0) return;
+                    isDragging = true;
+
+                    this.classList.toggle('selected');
+
+                    isSelecting = this.classList.contains('selected');
+                    updateStorage(this.dataset.id, isSelecting);
+                });
+
+                img.addEventListener('mouseenter', function() {
+                    if (isDragging) {
+                        if (isSelecting) {
+                            this.classList.add('selected');
+                        } else {
+                            this.classList.remove('selected');
+                        }
+                        updateStorage(this.dataset.id, isSelecting);
+                    }
+                });
+
+                gridEl.appendChild(img);
+            }
+
+            container.appendChild(gridEl);
+        });
+
+        document.getElementById('deselect-btn').addEventListener('click', () => {
+            const selectedImages = document.querySelectorAll('img.selected');
+            selectedImages.forEach(img => {
+                img.classList.remove('selected');
+            });
+            savedSelections = [];
+            localStorage.removeItem('dogamSelections');
+        });
+    </script>
+
+</body>
+</html>
