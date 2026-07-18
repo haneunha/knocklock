@@ -15,25 +15,24 @@
         }
 
         #main-container {
-            padding: 20px 10px 100px 10px; /* 하단에 정보창이 뜰 공간을 위해 하단 패딩 100px 추가 */
+            padding: 20px 10px 100px 10px;
             max-width: 1200px;
             margin: 0 auto;
         }
 
-        /* 클릭 가능한 도감 타이틀 설정 */
         #main-title {
             text-align: center;
             font-size: 36px;
             margin-top: 10px;
             margin-bottom: 30px;
             letter-spacing: 5px;
-            cursor: pointer; /* 마우스 오버 시 포인터 변경 */
-            color: #ff4757; /* 기본값: 빨간색 (선택 모드) */
+            cursor: pointer; 
+            color: #ff4757; 
             transition: color 0.3s ease, transform 0.1s ease;
         }
 
         #main-title:active {
-            transform: scale(0.95); /* 클릭 시 살짝 눌리는 효과 */
+            transform: scale(0.95); 
         }
 
         .gallery-grid {
@@ -72,20 +71,49 @@
             transform: scale(0.92);
         }
 
-        /* 선택 모드 (다중 선택 - 빨간 테두리) */
         .gallery-grid img.selected {
             border-color: #ff4757 !important;
         }
 
-        /* 정보 모드 (단일 선택 - 초록 테두리) */
         .gallery-grid img.info-selected {
             border-color: #2ecc71 !important;
         }
 
-        /* 하단 정보 패널 스타일 */
+        #deselect-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #ff4757;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        #deselect-btn:hover {
+            background-color: #ff6b81;
+            transform: scale(1.1);
+        }
+
+        #deselect-btn.hidden {
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.5); 
+        }
+
         #info-panel {
             position: fixed;
-            bottom: -150px; /* 기본적으로 화면 아래로 숨김 */
+            bottom: -150px;
             left: 0;
             width: 100%;
             background-color: #1a2530;
@@ -101,7 +129,6 @@
             z-index: 1000;
         }
 
-        /* 정보 패널이 올라올 때 추가되는 클래스 */
         #info-panel.show {
             bottom: 0;
         }
@@ -110,11 +137,11 @@
 <body>
 
     <div id="main-container">
-        <!-- 타이틀 클릭 시 모드 변경 -->
         <h1 id="main-title" title="클릭하여 모드 전환">도감</h1>
     </div>
 
-    <!-- 하단 정보 패널 -->
+    <button id="deselect-btn" title="전체 해제">X</button>
+
     <div id="info-panel">
         여기에 아이템 정보가 표시됩니다.
     </div>
@@ -132,28 +159,27 @@
         const container = document.getElementById('main-container');
         const mainTitle = document.getElementById('main-title');
         const infoPanel = document.getElementById('info-panel');
+        const deselectBtn = document.getElementById('deselect-btn'); 
         
         let savedSelections = JSON.parse(localStorage.getItem('dogamSelections')) || [];
 
-        // 모드 관리 변수 ('select' = 다중 선택, 'info' = 정보 보기)
         let currentMode = 'select'; 
-        let currentInfoId = null; // 현재 정보창에 띄워진 아이템 ID
+        let currentInfoId = null; 
 
         let isDragging = false;
         let isSelecting = true; 
+        let lastTouchedElement = null; // 모바일 드래그 시 방금 지나간 이미지 기록용
 
-        // 💡 타이틀 클릭 시 모드 전환 로직
         mainTitle.addEventListener('click', () => {
             if (currentMode === 'select') {
-                // 선택 -> 정보 모드로 변경 (초록색)
                 currentMode = 'info';
                 mainTitle.style.color = '#2ecc71';
+                deselectBtn.classList.add('hidden'); 
             } else {
-                // 정보 -> 선택 모드로 복귀 (빨간색)
                 currentMode = 'select';
                 mainTitle.style.color = '#ff4757';
+                deselectBtn.classList.remove('hidden'); 
                 
-                // 정보 모드 해제 시 띄워져 있던 정보창 닫기 및 초록 테두리 제거
                 infoPanel.classList.remove('show');
                 currentInfoId = null;
                 document.querySelectorAll('.info-selected').forEach(img => {
@@ -162,8 +188,23 @@
             }
         });
 
-        window.addEventListener('mouseup', () => {
+        deselectBtn.addEventListener('click', () => {
+            const selectedImages = document.querySelectorAll('img.selected');
+            selectedImages.forEach(img => {
+                img.classList.remove('selected');
+            });
+            savedSelections = [];
+            localStorage.removeItem('dogamSelections');
+        });
+
+        // 드래그 종료 이벤트 (PC, 모바일 공통 처리)
+        window.addEventListener('pointerup', () => {
             isDragging = false;
+            lastTouchedElement = null;
+        });
+        window.addEventListener('touchend', () => {
+            isDragging = false;
+            lastTouchedElement = null;
         });
 
         function updateStorage(id, add) {
@@ -191,46 +232,46 @@
                 const itemId = `${category.prefix}${i}`;
                 img.dataset.id = itemId;
 
-                // 새로고침 시 빨간 테두리(다중 선택) 기억
                 if (savedSelections.includes(itemId)) {
                     img.classList.add('selected');
                 }
 
                 img.ondragstart = () => false;
 
-                img.addEventListener('mousedown', function(e) {
-                    if (e.button !== 0) return; 
+                // 1. 선택 모드: 즉각적인 드래그 시작 (PC 마우스 & 모바일 터치 공통)
+                img.addEventListener('pointerdown', function(e) {
+                    if (e.pointerType === 'mouse' && e.button !== 0) return; 
                     
                     if (currentMode === 'select') {
-                        // 🔴 선택 모드 로직 (기존 드래그 다중 선택)
                         isDragging = true;
                         this.classList.toggle('selected');
                         isSelecting = this.classList.contains('selected');
                         updateStorage(this.dataset.id, isSelecting);
-                        
-                    } else if (currentMode === 'info') {
-                        // 🟢 정보 모드 로직 (단일 선택 및 하단 패널 띄우기)
+                        lastTouchedElement = this;
+                    }
+                });
+
+                // 2. 정보 모드: 스마트폰 스크롤 중 실수로 켜지는 걸 방지하기 위해 탭(click)으로 분리
+                img.addEventListener('click', function() {
+                    if (currentMode === 'info') {
                         if (currentInfoId === this.dataset.id) {
-                            // 이미 띄워진 아이템을 한 번 더 누른 경우 -> 정보창 닫기
                             infoPanel.classList.remove('show');
                             this.classList.remove('info-selected');
                             currentInfoId = null;
                         } else {
-                            // 새로운 아이템을 누른 경우 -> 기존 것 초기화 후 새 정보 띄우기
                             document.querySelectorAll('.info-selected').forEach(img => img.classList.remove('info-selected'));
                             this.classList.add('info-selected');
                             currentInfoId = this.dataset.id;
                             
-                            // 임시 텍스트 생성 (이곳에 실제 데이터나 설명을 연결할 수 있습니다)
                             infoPanel.textContent = `[${category.title}] ${this.alt}의 상세 정보입니다.`;
                             infoPanel.classList.add('show');
                         }
                     }
                 });
 
-                img.addEventListener('mouseenter', function() {
-                    // 드래그 선택은 오직 'select' 모드일 때만 작동
-                    if (currentMode === 'select' && isDragging) {
+                // 3. PC 전용 마우스 드래그 이동
+                img.addEventListener('pointerenter', function(e) {
+                    if (e.pointerType === 'mouse' && currentMode === 'select' && isDragging) {
                         if (isSelecting) {
                             this.classList.add('selected');
                         } else {
@@ -239,6 +280,28 @@
                         updateStorage(this.dataset.id, isSelecting);
                     }
                 });
+
+                // 4. 모바일 전용 손가락 드래그 이동 (핵심 기능)
+                img.addEventListener('touchmove', function(e) {
+                    if (currentMode === 'select' && isDragging) {
+                        e.preventDefault(); // 스크롤 안 넘어가고 드래그에 집중하게 함
+                        
+                        const touch = e.touches[0];
+                        // 손가락 위치 좌표(x, y)에 있는 실제 이미지 찾기
+                        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                        
+                        // 이미지고, 방금 전 지나온 이미지가 아니라면 처리
+                        if (element && element.tagName === 'IMG' && element !== lastTouchedElement) {
+                            if (isSelecting) {
+                                element.classList.add('selected');
+                            } else {
+                                element.classList.remove('selected');
+                            }
+                            updateStorage(element.dataset.id, isSelecting);
+                            lastTouchedElement = element;
+                        }
+                    }
+                }, { passive: false }); // preventDefault 작동을 위해 필수
 
                 gridEl.appendChild(img);
             }
