@@ -15,18 +15,25 @@
         }
 
         #main-container {
-            padding: 20px 10px;
+            padding: 20px 10px 100px 10px; /* 하단에 정보창이 뜰 공간을 위해 하단 패딩 100px 추가 */
             max-width: 1200px;
             margin: 0 auto;
         }
 
-        h1 {
+        /* 클릭 가능한 도감 타이틀 설정 */
+        #main-title {
             text-align: center;
             font-size: 36px;
-            color: #ffffff;
             margin-top: 10px;
             margin-bottom: 30px;
             letter-spacing: 5px;
+            cursor: pointer; /* 마우스 오버 시 포인터 변경 */
+            color: #ff4757; /* 기본값: 빨간색 (선택 모드) */
+            transition: color 0.3s ease, transform 0.1s ease;
+        }
+
+        #main-title:active {
+            transform: scale(0.95); /* 클릭 시 살짝 눌리는 효과 */
         }
 
         .gallery-grid {
@@ -65,44 +72,52 @@
             transform: scale(0.92);
         }
 
+        /* 선택 모드 (다중 선택 - 빨간 테두리) */
         .gallery-grid img.selected {
             border-color: #ff4757 !important;
         }
 
-        #deselect-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background-color: #ff4757;
-            color: white;
-            font-size: 28px;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s, background-color 0.2s;
+        /* 정보 모드 (단일 선택 - 초록 테두리) */
+        .gallery-grid img.info-selected {
+            border-color: #2ecc71 !important;
         }
 
-        #deselect-btn:hover {
-            background-color: #ff6b81;
-            transform: scale(1.1);
+        /* 하단 정보 패널 스타일 */
+        #info-panel {
+            position: fixed;
+            bottom: -150px; /* 기본적으로 화면 아래로 숨김 */
+            left: 0;
+            width: 100%;
+            background-color: #1a2530;
+            border-top: 4px solid #2ecc71;
+            color: #e0e0e0;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
+            transition: bottom 0.3s ease-in-out;
+            z-index: 1000;
+        }
+
+        /* 정보 패널이 올라올 때 추가되는 클래스 */
+        #info-panel.show {
+            bottom: 0;
         }
     </style>
 </head>
 <body>
 
     <div id="main-container">
-        <h1>도감</h1>
+        <!-- 타이틀 클릭 시 모드 변경 -->
+        <h1 id="main-title" title="클릭하여 모드 전환">도감</h1>
     </div>
 
-    <button id="deselect-btn" title="전체 해제">X</button>
+    <!-- 하단 정보 패널 -->
+    <div id="info-panel">
+        여기에 아이템 정보가 표시됩니다.
+    </div>
 
     <script>
         const categories = [
@@ -115,10 +130,37 @@
         ];
 
         const container = document.getElementById('main-container');
+        const mainTitle = document.getElementById('main-title');
+        const infoPanel = document.getElementById('info-panel');
+        
         let savedSelections = JSON.parse(localStorage.getItem('dogamSelections')) || [];
+
+        // 모드 관리 변수 ('select' = 다중 선택, 'info' = 정보 보기)
+        let currentMode = 'select'; 
+        let currentInfoId = null; // 현재 정보창에 띄워진 아이템 ID
 
         let isDragging = false;
         let isSelecting = true; 
+
+        // 💡 타이틀 클릭 시 모드 전환 로직
+        mainTitle.addEventListener('click', () => {
+            if (currentMode === 'select') {
+                // 선택 -> 정보 모드로 변경 (초록색)
+                currentMode = 'info';
+                mainTitle.style.color = '#2ecc71';
+            } else {
+                // 정보 -> 선택 모드로 복귀 (빨간색)
+                currentMode = 'select';
+                mainTitle.style.color = '#ff4757';
+                
+                // 정보 모드 해제 시 띄워져 있던 정보창 닫기 및 초록 테두리 제거
+                infoPanel.classList.remove('show');
+                currentInfoId = null;
+                document.querySelectorAll('.info-selected').forEach(img => {
+                    img.classList.remove('info-selected');
+                });
+            }
+        });
 
         window.addEventListener('mouseup', () => {
             isDragging = false;
@@ -149,6 +191,7 @@
                 const itemId = `${category.prefix}${i}`;
                 img.dataset.id = itemId;
 
+                // 새로고침 시 빨간 테두리(다중 선택) 기억
                 if (savedSelections.includes(itemId)) {
                     img.classList.add('selected');
                 }
@@ -157,16 +200,37 @@
 
                 img.addEventListener('mousedown', function(e) {
                     if (e.button !== 0) return; 
-                    isDragging = true;
                     
-                    this.classList.toggle('selected');
-                    
-                    isSelecting = this.classList.contains('selected');
-                    updateStorage(this.dataset.id, isSelecting);
+                    if (currentMode === 'select') {
+                        // 🔴 선택 모드 로직 (기존 드래그 다중 선택)
+                        isDragging = true;
+                        this.classList.toggle('selected');
+                        isSelecting = this.classList.contains('selected');
+                        updateStorage(this.dataset.id, isSelecting);
+                        
+                    } else if (currentMode === 'info') {
+                        // 🟢 정보 모드 로직 (단일 선택 및 하단 패널 띄우기)
+                        if (currentInfoId === this.dataset.id) {
+                            // 이미 띄워진 아이템을 한 번 더 누른 경우 -> 정보창 닫기
+                            infoPanel.classList.remove('show');
+                            this.classList.remove('info-selected');
+                            currentInfoId = null;
+                        } else {
+                            // 새로운 아이템을 누른 경우 -> 기존 것 초기화 후 새 정보 띄우기
+                            document.querySelectorAll('.info-selected').forEach(img => img.classList.remove('info-selected'));
+                            this.classList.add('info-selected');
+                            currentInfoId = this.dataset.id;
+                            
+                            // 임시 텍스트 생성 (이곳에 실제 데이터나 설명을 연결할 수 있습니다)
+                            infoPanel.textContent = `[${category.title}] ${this.alt}의 상세 정보입니다.`;
+                            infoPanel.classList.add('show');
+                        }
+                    }
                 });
 
                 img.addEventListener('mouseenter', function() {
-                    if (isDragging) {
+                    // 드래그 선택은 오직 'select' 모드일 때만 작동
+                    if (currentMode === 'select' && isDragging) {
                         if (isSelecting) {
                             this.classList.add('selected');
                         } else {
@@ -180,15 +244,6 @@
             }
 
             container.appendChild(gridEl);
-        });
-
-        document.getElementById('deselect-btn').addEventListener('click', () => {
-            const selectedImages = document.querySelectorAll('img.selected');
-            selectedImages.forEach(img => {
-                img.classList.remove('selected');
-            });
-            savedSelections = [];
-            localStorage.removeItem('dogamSelections');
         });
     </script>
 
