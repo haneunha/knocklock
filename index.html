@@ -7,23 +7,33 @@
     <style>
         body {
             font-family: 'Malgun Gothic', sans-serif;
-            padding: 20px 20%; 
             background-color: #121820; 
             margin: 0;
+            padding: 20px 0;
             color: #e0e0e0;
             user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        #main-container {
-            margin: 0 auto;
+        #content-wrapper {
+            width: 60%;
+            min-width: 292px;
             max-width: 1200px;
+        }
+
+        @media (max-width: 800px) {
+            #content-wrapper {
+                width: calc(100% - 40px);
+            }
         }
 
         h1 {
             text-align: center;
             font-size: 36px;
             color: #ffffff;
-            margin-top: 30px;
+            margin-top: 10px;
             margin-bottom: 10px;
             letter-spacing: 5px;
         }
@@ -31,15 +41,13 @@
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, 70px);
-            justify-content: center;
+            justify-content: flex-start;
             gap: 4px;
-            min-width: 292px;
-            margin-bottom: 40px; /* 카테고리 간 간격 추가 */
+            margin-bottom: 40px;
         }
 
-        /* 제목을 그리드 안으로 넣고 전체 폭(1 / -1)을 차지하게 만듦 */
         h2 {
-            grid-column: 1 / -1; 
+            grid-column: 1 / -1;
             color: #e0e0e0;
             border-left: 5px solid #e0e0e0;
             padding-left: 10px;
@@ -100,12 +108,13 @@
 </head>
 <body>
 
-    <h1>도감</h1>
+    <div id="content-wrapper">
+        <h1>도감</h1>
+        <div id="main-container">
+        </div>
+    </div>
 
     <button id="deselect-btn" title="전체 해제">X</button>
-
-    <div id="main-container">
-    </div>
 
     <script>
         const categories = [
@@ -140,7 +149,6 @@
             const gridEl = document.createElement('div');
             gridEl.className = 'gallery-grid';
             
-            // h2 태그를 메인 컨테이너가 아니라 gallery-grid 안으로 삽입
             const titleEl = document.createElement('h2');
             titleEl.textContent = category.title;
             gridEl.appendChild(titleEl);
