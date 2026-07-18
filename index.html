@@ -7,8 +7,7 @@
     <style>
         body {
             font-family: 'Malgun Gothic', sans-serif;
-            /* 좌우 여백 20%는 그대로 유지 */
-            padding: 20px 20%; 
+            padding: 20px 15%; 
             background-color: #121820; 
             margin: 0;
             color: #e0e0e0;
@@ -33,19 +32,17 @@
             font-size: 20px;
         }
 
-        /* 한 줄 8개 고정(Grid)을 없애고, 유동적 줄바꿈(Flex)으로 변경 */
         .gallery-grid {
             display: flex;
-            flex-wrap: wrap; /* 공간이 부족하면 알아서 다음 줄로 넘어감 */
+            flex-wrap: wrap;
             gap: 4px;
         }
 
-        /* 개별 이미지 스타일 (크기 고정) */
         .gallery-grid img {
-            width: 70px;  /* 사진 고정 크기 (원하는 대로 수정 가능) */
-            height: 70px; /* width와 똑같이 맞춰주세요 */
+            width: 70px;
+            height: 70px;
             object-fit: contain;
-            padding: 8px; /* 고정 크기에 맞게 내부 여백 조정 */
+            padding: 8px;
             box-sizing: border-box;
             cursor: pointer;
             border: 2px solid transparent;
